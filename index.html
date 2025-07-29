@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FileShift X - Modern File Converter</title>
+    <meta name="description"
+        content="A fast, private, in-browser file converter. Batch convert WEBP, PNG, JPG, AVIF, TIFF and more without uploading your files.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/utif@3.1.0/UTIF.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dcraw-js@latest/dcraw.js"></script>
+    <script src="script.js" defer></script>
+</head>
+
+<body>
+    <div id="global-drop-overlay" class="hidden">
+        <p>Drag & drop anywhere to add files</p>
+    </div>
+    <header class="navbar">
+        <div class="container"><a href="#" class="logo" id="logo-btn"><svg width="32" height="32" viewBox="0 0 24 24"
+                    fill="none" xmlns="http://www.w3.org/2000/svg" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+                </svg><span class="gradient-text">FileShift X</span></a>
+            <nav><a href="https://github.com/your-username" target="_blank">GitHub</a></nav>
+        </div>
+    </header>
+    <main>
+        <div class="container">
+            <div id="converter-area" class="converter-area-empty">
+                <div id="drop-zone-wrapper">
+                    <div class="drop-zone-wrapper-content">
+                        <h1 class="gradient-text">Privacy-First File Conversion</h1>
+                        <p class="subtitle">Batch convert images right in your browser. Fast, secure, and private.</p>
+                        <div id="drop-zone" class="drop-zone-large">
+                            <div class="drop-zone-content"><svg width="50" height="50" viewBox="0 0 24 24" fill="none"
+                                    xmlns="http://www.w3.org/2000/svg">
+                                    <path
+                                        d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                    <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2"
+                                        stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round" />
+                                </svg>
+                                <p class="drop-message">Drag & drop files here</p>
+                                <p class="or-separator">or</p><button id="select-files-btn" class="btn">Select
+                                    Files</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="file-list-area">
+                    <div class="file-list-header">
+                        <h2>Conversion Queue</h2><button id="clear-all-btn" class="btn-secondary">Clear All</button>
+                    </div>
+                    <div class="global-controls">
+                        <div class="format-selection"><label for="format-select">Convert all to:</label><select
+                                id="format-select">
+                                <option value="png">PNG</option>
+                                <option value="jpeg">JPG</option>
+                                <option value="webp">WEBP</option>
+                                <option value="avif">AVIF</option>
+                                <option value="tiff">TIFF</option>
+                                <option value="bmp">BMP</option>
+                            </select></div>
+                        <div id="action-buttons"></div>
+                    </div>
+                    <div class="advanced-controls">
+                        <div id="quality-control" class="control-group">
+                            <div class="slider-container"><label for="quality-slider">Quality: <span
+                                        id="quality-value">100</span>%</label><span class="info-tooltip">?<span
+                                        class="tooltip-text">Lower quality reduces file size but may cause image
+                                        degradation. Affects JPG, WEBP, and AVIF.</span></span><input type="range"
+                                    id="quality-slider" min="0" max="100" value="100" step="5"></div>
+                        </div>
+                        <div id="naming-control" class="control-group"><label for="naming-rule-select">File
+                                naming:</label>
+                            <div class="naming-rule-group"><select id="naming-rule-select">
+                                    <option value="original">Keep Original Name</option>
+                                    <option value="prefix">Add Prefix</option>
+                                    <option value="suffix">Add Suffix</option>
+                                    <option value="autonumber">Auto Number (file-1)</option>
+                                </select><input type="text" id="prefix-input" class="hidden"
+                                    placeholder="Prefix..."><input type="text" id="suffix-input" class="hidden"
+                                    placeholder="...Suffix"></div>
+                            <p id="naming-example">Example: IMG_2023.jpg</p>
+                        </div>
+                    </div>
+                    <div id="progress-area" class="hidden">
+                        <div class="progress-bar-container">
+                            <div id="progress-bar"></div>
+                        </div><span id="progress-percentage">0%</span><button id="cancel-conversion-btn"
+                            class="btn-secondary">Cancel</button>
+                    </div>
+                    <div id="drop-zone-small"><span>Drag & drop more files or <a>click here</a> to select.</span></div>
+                    <div id="files-container"></div>
+                </div><input type="file" id="file-input" multiple hidden>
+            </div>
+        </div>
+    </main>
+    <section class="info-section">
+        <div class="container">
+            <h2 class="gradient-text">Why <strong>FileShift X</strong> is Your Smartest Choice</h2>
+            <div class="features-grid">
+                <div class="feature-card"><svg class="feature-icon" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z">
+                        </path>
+                    </svg>
+                    <h3>Your Files, Your Control</h3>
+                    <p>All conversions happen in your browser. Your images remain 100% private and are never seen by
+                        anyone else, ensuring total security and peace of mind.</p>
+                </div>
+                <div class="feature-card"><svg class="feature-icon" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M19.35,10.04C18.67,6.59 15.64,4 12,4C9.11,4 6.6,5.64 5.35,8.04C2.34,8.36 0,10.91 0,14A6,6 0 0,0 6,20H19A5,5 0 0,0 24,15C24,12.36 21.95,10.22 19.35,10.04M19,18H6A4,4 0 0,1 2,14C2,11.95 3.53,10.24 5.56,10.03L6.63,9.92L7.13,8.97C8.08,7.14 9.94,6 12,6C14.62,6 16.88,7.86 17.39,10.43L17.69,11.93L19.22,12.04C20.78,12.14 22,13.45 22,15A3,3 0 0,1 19,18M10.21,12.46L12,10.67L13.79,12.46L15.21,11.05L12,7.84L8.79,11.05L10.21,12.46Z">
+                        </path>
+                    </svg>
+                    <h3>Lightning Speed & Efficiency</h3>
+                    <p>Built with modern web technologies, <strong>FileShift X</strong> converts files instantly without
+                        freezing your UI. Get your work done in record time.</p>
+                </div>
+                <div class="feature-card"><svg class="feature-icon" viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M12,2L1,21H23M12,6L19.53,19H4.47M11,10V14H13V10M11,16V18H13V16">
+                        </path>
+                    </svg>
+                    <h3>Pro RAW Workflow</h3>
+                    <p>Unlock your professional photos. We process camera RAW files (.NEF, .CR2, .ARW, etc.) by
+                        extracting their high-quality embedded previews, letting you convert them into usable formats
+                        like JPG or PNG without special software.</p>
+                </div>
+                <div class="feature-card"><svg class="feature-icon" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M21,16.5C21,16.88 20.79,17.21 20.47,17.38L12.57,21.82C12.41,21.94 12.21,22 12,22C11.79,22 11.59,21.94 11.43,21.82L3.53,17.38C3.21,17.21 3,16.88 3,16.5V7.5C3,7.12 3.21,6.79 3.53,6.62L11.43,2.18C11.59,2.06 11.79,2 12,2C12.21,2 12.41,2.06 12.57,2.18L20.47,6.62C20.79,6.79 21,7.12 21,7.5V16.5M12,4.15L6.04,7.5L12,10.85L17.96,7.5L12,4.15Z" />
+                    </svg>
+                    <h3>Powerful Batch Processing</h3>
+                    <p>Don't waste time converting files one by one. Drag and drop multiple images at once and convert
+                        them all with a single click. Download everything neatly in a ZIP file.</p>
+                </div>
+                <div class="feature-card"><svg class="feature-icon" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M4,6H2V20A2,2 0 0,0 4,22H18V20H4V6M20,2H8A2,2 0 0,0 6,4V16A2,2 0 0,0 8,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2Z" />
+                    </svg>
+                    <h3>Animated & Intuitive</h3>
+                    <p>An interface that's not just functional, but a joy to use. Smooth animations and a responsive
+                        design provide a seamless experience on any device, desktop or mobile.</p>
+                </div>
+                <div class="feature-card"><svg class="feature-icon" viewBox="0 0 24 24">
+                        <path fill="currentColor"
+                            d="M13.13 22.19L11.5 21.88L10.88 20.5L9.25 20.19L9.13 18.56L8.09 17.78L7.05 18.56L6.94 20.19L5.31 20.5L4.69 21.88L3.06 22.19L3.34 23.75L2 24L2.63 22.63L2.25 21.06L3.88 20.75L4.5 19.38L6.13 19.06L6.25 17.44L7.29 16.66L8.33 17.44L8.44 19.06L10.06 19.38L10.69 20.75L12.31 21.06L12.69 22.63L14 24L13.63 23.75L13.13 22.19M19.5 12.5C19.5 11.2 19.11 10.03 18.44 9.09L17.93 8.5L18.44 7.91C19.11 6.97 19.5 5.8 19.5 4.5C19.5 2 17.5 0 15 0C13.25 0 11.73 1.16 11.17 2.69L11.13 2.81L11.09 2.69C10.53 1.16 9 0 7.25 0C4.75 0 2.75 2 2.75 4.5C2.75 5.8 3.14 6.97 3.81 7.91L4.32 8.5L3.81 9.09C3.14 10.03 2.75 11.2 2.75 12.5C2.75 14.94 4.58 16.92 7 17.41V16.13C5.55 15.68 4.5 14.21 4.5 12.5C4.5 11.53 4.8 10.66 5.34 9.97L5.85 9.38L5.34 8.78C4.8 8.1 4.5 7.23 4.5 6.25C4.5 4.85 5.47 3.6 7 3.29V1.59C8.94 1.96 10.5 3.56 10.5 5.5C10.5 6.41 10.19 7.24 9.69 7.91L9.18 8.5L9.69 9.09C10.19 9.76 10.5 10.59 10.5 11.5C10.5 13.44 11.75 15.06 13.5 15.42V13.61C12.39 13.22 11.5 12.2 11.5 10.93C11.5 9.94 11.82 9.05 12.39 8.35L12.9 7.75L12.39 7.15C11.82 6.45 11.5 5.56 11.5 4.58C11.5 2.85 13.06 1.5 15 1.5C16.94 1.5 18.5 3.06 18.5 5C18.5 5.91 18.19 6.74 17.69 7.41L17.18 8L17.69 8.59C18.19 9.26 18.5 10.09 18.5 11C18.5 12.7 17.25 14.15 15.5 14.58V16.39C17.92 15.94 19.5 14.06 19.5 12.5Z">
+                        </path>
+                    </svg>
+                    <h3>Instant & Ad-Free</h3>
+                    <p>No sign-ups, no tracking, and no ads. Start converting your images immediately with a clean and
+                        focused interface built for speed and simplicity.</p>
+                </div>
+            </div>
+            <div class="info-footer">
+                <p class="limits-info"><strong>Standard Inputs:</strong> PNG, JPG, WEBP, BMP, AVIF, TIFF.
+                    <br /><strong>RAW Inputs (to standard formats):</strong> NEF, CR2, ARW, RW2.</p>
+                <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
+                    data-name="bmc-button" data-slug="andonoff" data-color="#FFDD00" data-emoji="☕" data-font="Comic"
+                    data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#000000"
+                    data-coffee-color="#ffffff"></script>
+            </div>
+        </div>
+    </section>
+    <footer class="site-footer">
+        <div class="container">
+            <p>© 2025 <strong>FileShift X</strong>. All conversions are done locally in your browser.</p>
+        </div>
+    </footer>
+</body>
+
+</html>
